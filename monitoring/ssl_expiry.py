@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import Dict, Any
 from urllib.parse import urlparse
 
-from .common import append_markdown, check_ssl_expiry, now_iso, save_json
-from . import config as cfg
+from .common import append_markdown, check_ssl_expiry, now_iso, save_json, cfg
 
 
 def run() -> Dict[str, Any]:

@@ -3,8 +3,7 @@ from __future__ import annotations
 from collections import deque
 from typing import Dict, Any, List, Set
 
-from .common import append_markdown, extract_links, http_request, is_allowed_url, now_iso, save_json
-from . import config as cfg
+from .common import append_markdown, extract_links, http_request, is_allowed_url, now_iso, save_json, cfg
 
 
 def run() -> Dict[str, Any]:

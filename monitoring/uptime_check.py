@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Any
 
-from .common import HttpResponse, append_markdown, http_request, now_iso, save_json
-from . import config as cfg
+from .common import HttpResponse, append_markdown, http_request, now_iso, save_json, cfg
 
 
 def run() -> Dict[str, Any]:

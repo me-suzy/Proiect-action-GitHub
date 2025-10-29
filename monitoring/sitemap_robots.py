@@ -4,8 +4,7 @@ import re
 from typing import Dict, Any, List
 from urllib.parse import urljoin
 
-from .common import append_markdown, http_request, now_iso, save_json
-from . import config as cfg
+from .common import append_markdown, http_request, now_iso, save_json, cfg
 
 
 def run() -> Dict[str, Any]:
