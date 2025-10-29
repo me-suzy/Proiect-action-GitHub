@@ -1,0 +1,29 @@
+{
+  "sites": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com",
+      "expected_status": 200,
+      "timeout": 10
+    },
+    {
+      "name": "Google",
+      "url": "https://www.google.com",
+      "expected_status": 200,
+      "timeout": 10
+    },
+    {
+      "name": "Python.org",
+      "url": "https://www.python.org",
+      "expected_status": 200,
+      "timeout": 10
+    },
+    {
+      "name": "Stack Overflow",
+      "url": "https://stackoverflow.com",
+      "expected_status": 200,
+      "timeout": 10
+    }
+  ]
+}
+

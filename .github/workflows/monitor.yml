@@ -1,0 +1,82 @@
+name: Website Health Monitor
+
+on:
+  schedule:
+    # Rulează la fiecare 6 ore
+    - cron: '0 */6 * * *'
+  workflow_dispatch:  # Permite rulare manuală
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'sites.json'
+      - 'website_monitor.py'
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 📦 Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: 🔍 Run Website Monitor (non-blocking)
+      id: monitor
+      run: |
+        python website_monitor.py || echo "monitor script exited non-zero"
+      continue-on-error: true
+    
+    - name: 📊 Upload JSON Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: monitor-report-json
+        path: monitor_report.json
+        retention-days: 30
+    
+    - name: 📝 Upload Markdown Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: monitor-report-md
+        path: monitor_report.md
+        retention-days: 30
+    
+    - name: 📈 Comment PR with Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('monitor_report.json', 'utf8'));
+          const summary = report.summary;
+          
+          const body = `## 🔍 Website Monitor Results
+          
+          **Summary:**
+          - ✅ Healthy: ${summary.healthy_sites}/${summary.total_sites}
+          - 📊 Uptime: ${summary.uptime_percentage}%
+          
+          ${summary.unhealthy_sites > 0 ? '⚠️ **Warning:** Some sites are unhealthy!' : '✅ All sites are healthy!'}
+          
+          [View full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+    
+    - name: 🚦 Set job conclusion (always success)
+      if: always()
+      run: echo "Job finished. Reports uploaded."
+

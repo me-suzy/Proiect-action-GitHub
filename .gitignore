@@ -1,0 +1,38 @@
+# Rapoarte generate
+monitor_report.json
+monitor_report.md
+
+# Configurare locală (poate conține token-uri)
+config.py
+*.pyc
+__pycache__/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.coverage.*
+

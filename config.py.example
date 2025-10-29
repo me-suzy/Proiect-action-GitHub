@@ -1,0 +1,20 @@
+"""
+EXEMPLU - Configurare pentru push_to_github.py
+
+Creează un fișier config.py (fără .example) și pune valorile tale aici.
+SAU folosește variabile de mediu pentru securitate maximă.
+"""
+
+# Opțiunea 1: Hardcode (mai puțin sigur, dar ușor)
+USER_GITHUB = "ME-SUZY"  # Username-ul tău GitHub
+TOKEN_GITHUB = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # Token-ul tău GitHub
+REPO_NAME = "Proiect-action-GitHub"  # Numele repository-ului
+REPO_OWNER = "ME-SUZY"  # Owner (de obicei același cu USER_GITHUB)
+
+# Opțiunea 2: Variabile de mediu (MAI SIGUR)
+# Setează-le în PowerShell:
+# $env:GITHUB_USER = "ME-SUZY"
+# $env:GITHUB_TOKEN = "ghp_xxxxx"
+# 
+# Apoi scriptul le va citi automat!
+
