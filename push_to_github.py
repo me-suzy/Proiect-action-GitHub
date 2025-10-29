@@ -16,6 +16,12 @@ import json
 import urllib.request
 import urllib.error
 
+# Fix encoding pentru Windows
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 # ========================================
 # CONFIGURARE - NU PUNE TOKEN-UL AICI! Folosește doar variabile de mediu sau config.py
 # ========================================
@@ -263,8 +269,14 @@ def main():
     add_all_files()
 
     # Mesaj commit
-    commit_message = input("\n💬 Mesaj commit (Enter pentru 'Initial commit'): ").strip() or \
-                     "Initial commit: Website Monitor & Health Checker"
+    try:
+        if sys.stdin.isatty():
+            commit_message = input("\n💬 Mesaj commit (Enter pentru 'Initial commit'): ").strip() or \
+                             "Initial commit: Website Monitor & Health Checker"
+        else:
+            commit_message = "Initial commit: Website Monitor & Health Checker"
+    except (EOFError, KeyboardInterrupt):
+        commit_message = "Initial commit: Website Monitor & Health Checker"
     create_commit(commit_message)
 
     setup_remote(owner, REPO_NAME)

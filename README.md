@@ -65,6 +65,8 @@ Editează `sites.json` pentru a adăuga/modifica site-uri:
 
 ## 🔄 GitHub Actions
 
+> 📘 **Ghid Complet:** Vezi [`GHID_ACTIONS.md`](GHID_ACTIONS.md) pentru tutorial pas-cu-pas despre cum să folosești Actions!
+
 Proiectul include două workflow-uri automate:
 
 ### 1. Website Health Monitor (`monitor.yml`)
