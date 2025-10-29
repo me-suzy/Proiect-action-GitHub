@@ -38,6 +38,13 @@ def run() -> Dict[str, Any]:
 	}
 	save_json("link_checker", result)
 	append_markdown("summary", f"- Links: scanned={result['scanned']} broken={result['broken_count']}")
+	if broken:
+		append_markdown("summary", "  Top broken (max 20):")
+		for item in broken[:20]:
+			if "status" in item:
+				append_markdown("summary", f"    - {item['url']} — HTTP {item['status']}")
+			else:
+				append_markdown("summary", f"    - {item['url']} — error: {item.get('error','unknown')}")
 	return result
 
 

@@ -80,8 +80,21 @@ jobs:
               return;
             }
             const title = 'Site Monitoring Alerts';
+            // Build details (top 20 broken links)
+            let details = '';
+            if ((data.links?.broken||[]).length > 0) {
+              details += '\n\nTop broken links:';
+              for (const item of data.links.broken.slice(0,20)) {
+                if (item.status) details += `\n- ${item.url} — HTTP ${item.status}`;
+                else details += `\n- ${item.url} — error: ${item.error||'unknown'}`;
+              }
+            }
+            if ((data.security?.missing||[]).length > 0) {
+              details += '\n\nMissing security headers:';
+              for (const h of data.security.missing) details += `\n- ${h}`;
+            }
             const body = `Automated monitoring detected issues for ${data.site} at ${data.timestamp}.\n\n`+
-              problems.map(p=>`- ${p}`).join('\n') +
+              problems.map(p=>`- ${p}`).join('\n') + details +
               `\n\nArtifacts: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             // Find open issue with same title
             const issues = await github.rest.issues.listForRepo({owner: context.repo.owner, repo: context.repo.repo, state: 'open'});

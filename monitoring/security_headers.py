@@ -24,10 +24,11 @@ def run() -> Dict[str, Any]:
 		"timestamp": now_iso(),
 	}
 	save_json("security_headers", result)
-	append_markdown(
-		"summary",
-		f"- Security headers: status={resp.status} missing={len(missing)}"
-	)
+	append_markdown("summary", f"- Security headers: status={resp.status} missing={len(missing)}")
+	if missing:
+		append_markdown("summary", "  Missing headers:")
+		for h in missing:
+			append_markdown("summary", f"    - {h}")
 	return result
 
 
