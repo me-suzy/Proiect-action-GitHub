@@ -2,6 +2,10 @@
 monitor_report.json
 monitor_report.md
 
+# Monitoring outputs
+monitoring/.reports/
+monitoring/config.py
+
 # Configurare locală (poate conține token-uri)
 config.py
 *.pyc

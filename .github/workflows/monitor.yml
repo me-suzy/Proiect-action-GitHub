@@ -1,82 +1,93 @@
-name: Website Health Monitor
+name: Site Monitoring
 
 on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: "Site URL"
+        required: false
+        default: "https://neculaifantanaru.com"
   schedule:
-    # Rulează la fiecare 6 ore
-    - cron: '0 */6 * * *'
-  workflow_dispatch:  # Permite rulare manuală
-  push:
-    branches: [ main, master ]
-    paths:
-      - 'sites.json'
-      - 'website_monitor.py'
+    - cron: "17 4 * * *" # daily 04:17 UTC
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      actions: read
+      issues: write
     steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v4
-    
-    - name: 🐍 Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: 📦 Install dependencies
-      run: |
-        pip install -r requirements.txt
-    
-    - name: 🔍 Run Website Monitor (non-blocking)
-      id: monitor
-      run: |
-        python website_monitor.py || echo "monitor script exited non-zero"
-      continue-on-error: true
-    
-    - name: 📊 Upload JSON Report
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: monitor-report-json
-        path: monitor_report.json
-        retention-days: 30
-    
-    - name: 📝 Upload Markdown Report
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: monitor-report-md
-        path: monitor_report.md
-        retention-days: 30
-    
-    - name: 📈 Comment PR with Results
-      if: github.event_name == 'pull_request' && always()
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const fs = require('fs');
-          const report = JSON.parse(fs.readFileSync('monitor_report.json', 'utf8'));
-          const summary = report.summary;
-          
-          const body = `## 🔍 Website Monitor Results
-          
-          **Summary:**
-          - ✅ Healthy: ${summary.healthy_sites}/${summary.total_sites}
-          - 📊 Uptime: ${summary.uptime_percentage}%
-          
-          ${summary.unhealthy_sites > 0 ? '⚠️ **Warning:** Some sites are unhealthy!' : '✅ All sites are healthy!'}
-          
-          [View full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: body
-          });
-    
-    - name: 🚦 Set job conclusion (always success)
-      if: always()
-      run: echo "Job finished. Reports uploaded."
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r monitoring/requirements.txt
+
+      - name: Configure site URL
+        run: |
+          echo "SITE_URL = \"${{ github.event.inputs.site_url || 'https://neculaifantanaru.com' }}\"" > monitoring/config.py
+
+      - name: Run checks
+        run: |
+          python -c "import monitoring.run_all as r; r.run_all()"
+
+      - name: Summarize report
+        if: always()
+        run: |
+          if [ -f monitoring/.reports/summary.md ]; then
+            echo "## Site Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+            cat monitoring/.reports/summary.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No summary.md generated." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-monitoring-reports
+          path: monitoring/.reports/
+          if-no-files-found: ignore
+
+      - name: Create or update Issue on problems
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'monitoring/.reports/aggregate.json';
+            if (!fs.existsSync(path)) {
+              core.info('No aggregate.json found; skipping issue creation.');
+              return;
+            }
+            const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const problems = [];
+            if (!data.uptime?.ok) problems.push(`Uptime status ${data.uptime?.status} elapsed ${data.uptime?.elapsed_ms}ms`);
+            if (data.ssl?.warn) problems.push(`SSL warn: days_left=${data.ssl?.days_left} error=${data.ssl?.error||''}`);
+            if ((data.links?.broken_count||0) > 0) problems.push(`Broken links: ${data.links?.broken_count}`);
+            if ((data.security?.missing||[]).length > 0) problems.push(`Missing headers: ${data.security?.missing.join(', ')}`);
+            if ((data.robots?.issues||[]).length > 0) problems.push(`Robots/Sitemap issues: ${data.robots?.issues.join('; ')}`);
+            if (problems.length === 0) {
+              core.info('No problems detected.');
+              return;
+            }
+            const title = 'Site Monitoring Alerts';
+            const body = `Automated monitoring detected issues for ${data.site} at ${data.timestamp}.\n\n`+
+              problems.map(p=>`- ${p}`).join('\n') +
+              `\n\nArtifacts: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            // Find open issue with same title
+            const issues = await github.rest.issues.listForRepo({owner: context.repo.owner, repo: context.repo.repo, state: 'open'});
+            const existing = issues.data.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({owner: context.repo.owner, repo: context.repo.repo, issue_number: existing.number, body});
+            } else {
+              await github.rest.issues.create({owner: context.repo.owner, repo: context.repo.repo, title, body, labels: ['monitoring','automated']});
+            }
