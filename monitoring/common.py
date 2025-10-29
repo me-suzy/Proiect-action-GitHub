@@ -35,10 +35,13 @@ for k, v in _Defaults.__dict__.items():
 		setattr(cfg, k, v)
 
 try:  # optional user config
-	from . import config as _user_cfg  # type: ignore
-	for k, v in _user_cfg.__dict__.items():
-		if k.isupper():
-			setattr(cfg, k, v)
+	import monitoring.config as _user_cfg  # type: ignore
+	import sys
+	# The workflow creates a stub config.py, make sure it doesn't shadow our defaults
+	if '_user_cfg' in sys.modules:
+		for k, v in _user_cfg.__dict__.items():
+			if k.isupper() and hasattr(cfg, k):
+				setattr(cfg, k, v)
 except Exception:
 	pass
 
