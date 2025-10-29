@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import dataclasses
 import json
 import os
@@ -16,19 +15,32 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 import http.client
 
 
-try:
-	from . import config as cfg  # type: ignore
+class _Defaults:
+	SITE_URL = "https://neculaifantanaru.com"
+	REQUEST_TIMEOUT_SECONDS = 20
+	MAX_PAGES_CRAWL = 200
+	ALLOWED_HOSTS = ["neculaifantanaru.com", "www.neculaifantanaru.com"]
+	USER_AGENT = "SiteMonitor/1.0 (+https://github.com/me-suzy/Proiect-action-GitHub)"
+	REPORT_DIR = ".reports"
+	TTFB_WARNING_MS = 800
+	SSL_EXPIRY_WARN_DAYS = 15
+
+
+# Build a config object that overlays user config over defaults
+class cfg:  # type: ignore
+	pass
+
+for k, v in _Defaults.__dict__.items():
+	if k.isupper():
+		setattr(cfg, k, v)
+
+try:  # optional user config
+	from . import config as _user_cfg  # type: ignore
+	for k, v in _user_cfg.__dict__.items():
+		if k.isupper():
+			setattr(cfg, k, v)
 except Exception:
-	# Fallback to defaults if config.py not present; use sample defaults
-	class cfg:  # type: ignore
-		SITE_URL = "https://neculaifantanaru.com"
-		REQUEST_TIMEOUT_SECONDS = 20
-		MAX_PAGES_CRAWL = 200
-		ALLOWED_HOSTS = ["neculaifantanaru.com", "www.neculaifantanaru.com"]
-		USER_AGENT = "SiteMonitor/1.0 (+https://github.com/me-suzy/Proiect-action-GitHub)"
-		REPORT_DIR = ".reports"
-		TTFB_WARNING_MS = 800
-		SSL_EXPIRY_WARN_DAYS = 15
+	pass
 
 
 @dataclasses.dataclass
@@ -109,9 +121,6 @@ def is_allowed_url(url: str) -> bool:
 
 def check_ssl_expiry(hostname: str) -> Tuple[Optional[int], Optional[str]]:
 	# Returns (days_left, error)
-	context = ssl_module.create_default_context()
-	with contextlib.closing(ssl_module.create_default_context().wrap_socket(ssl_module.SSLContext().wrap_socket if False else None)):
-		pass  # placeholder for linters; we'll use socket+ssl below
 	import socket
 	try:
 		with socket.create_connection((hostname, 443), timeout=cfg.REQUEST_TIMEOUT_SECONDS) as sock:
