@@ -1,0 +1,35 @@
+### Ce face monitorizarea acum
+- Uptime + viteză răspuns
+  - Verifică `SITE_URL`, cod HTTP și timpul până la primul byte.
+  - Flag “warning” dacă TTFB ≥ 800 ms.
+- Certificat SSL
+  - Calculează zilele rămase; “warn” când ≤ 15 zile sau dacă apare o eroare.
+- robots.txt + sitemap
+  - Codul pentru `robots.txt`, extrage primul `Sitemap:` și verifică statusul lui.
+- Link checker
+  - Crawl limitat (200 pagini din domeniu), raportează câte linkuri sunt rupte (HTTP ≥ 400).
+- Headere de securitate
+  - Verifică prezența unor headere recomandate: HSTS, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP.
+
+### Unde vezi rezultatele
+- În fiecare run din Actions:
+  - “Summary” afișează un rezumat rapid.
+  - Artifactul `site-monitoring-reports` conține:
+    - `aggregate.json` – toate rezultatele într-un singur fișier.
+    - `summary.md` – sumar în Markdown.
+    - fișiere JSON individuale: `uptime.json`, `ssl_expiry.json`, `sitemap_robots.json`, `link_checker.json`, `security_headers.json`.
+- Dacă sunt probleme, se creează/actualizează automat Issue “Site Monitoring Alerts” cu lista pe scurt.
+
+### Ce să urmărești
+- Uptime: status 200–399 și `elapsed_ms` sub 800 ms.
+- SSL: `days_left` > 15 și fără erori.
+- Link checker: `broken_count` = 0.
+- Securitate: `missing` gol (toate headerele prezente).
+- Robots/Sitemap: status 200 și fără `issues`.
+
+### Cum schimbi setările
+- Creează `monitoring/config.py` (copie după `config.py.sample`) și ajustează:
+  - `SITE_URL`, `MAX_PAGES_CRAWL`, `TTFB_WARNING_MS`, `SSL_EXPIRY_WARN_DAYS`, `ALLOWED_HOSTS`.
+- Rulezi manual din Actions → “Site Monitoring” → Run workflow.
+
+Vrei să ajustez pragurile (TTFB, zile SSL) sau numărul de pagini crawl-uit pentru site-ul tău?

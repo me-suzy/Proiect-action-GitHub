@@ -75,7 +75,7 @@ jobs:
             if ((data.links?.broken_count||0) > 0) problems.push(`Broken links: ${data.links?.broken_count}`);
             if ((data.security?.missing||[]).length > 0) problems.push(`Missing headers: ${data.security?.missing.join(', ')}`);
             if ((data.robots?.issues||[]).length > 0) problems.push(`Robots/Sitemap issues: ${data.robots?.issues.join('; ')}`);
-            if (!data.seo?.ok && (data.seo?.issues||[]).length > 0) problems.push(`SEO issues: ${data.seo.issues.length}`);
+            if ((data.seo?.issues_by_url||[]).length > 0) problems.push(`SEO issues: ${data.seo.global_issues_count} pages`);
             if (!data.dns?.ok) problems.push(`DNS error: ${data.dns?.error||'unknown'}`);
             if (!data.images?.ok && (data.images?.issues||[]).length > 0) problems.push(`Image issues: ${data.images.issues.length}`);
             if (problems.length === 0) {
@@ -96,9 +96,17 @@ jobs:
               details += '\n\nMissing security headers:';
               for (const h of data.security.missing) details += `\n- ${h}`;
             }
-            if ((data.seo?.issues||[]).length > 0) {
-              details += '\n\nSEO issues:';
-              for (const issue of data.seo.issues) details += `\n- ${issue}`;
+            if ((data.seo?.issues_by_url||[]).length > 0) {
+              details += '\n\nSEO issues by page:';
+              for (const item of data.seo.issues_by_url.slice(0,15)) {
+                details += `\n- ${item.url}: ${item.issue}`;
+              }
+            }
+            if ((data.seo?.warnings_by_url||[]).length > 0) {
+              details += '\n\nSEO warnings by page:';
+              for (const item of data.seo.warnings_by_url.slice(0,15)) {
+                details += `\n- ${item.url}: ${item.warning}`;
+              }
             }
             if ((data.images?.issues||[]).length > 0) {
               details += '\n\nImage issues:';

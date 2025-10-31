@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from . import config as cfg
 from .common import append_markdown, ensure_report_dir, now_iso, save_json
-from . import uptime_check, ssl_expiry, sitemap_robots, link_checker, security_headers, seo_check, dns_check, image_check
+from . import uptime_check, ssl_expiry, sitemap_robots, link_checker, security_headers, seo_crawler, dns_check, image_check
 
 
 def run_all() -> Dict[str, Any]:
@@ -18,7 +18,7 @@ def run_all() -> Dict[str, Any]:
 	rob = sitemap_robots.run()
 	links = link_checker.run()
 	sec = security_headers.run()
-	seo = seo_check.run()
+	seo = seo_crawler.run()
 	dns = dns_check.run()
 	images = image_check.run()
 
