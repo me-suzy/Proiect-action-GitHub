@@ -59,6 +59,7 @@ jobs:
           name: site-monitoring-reports
           path: monitoring/.reports/
           if-no-files-found: ignore
+          include-hidden-files: true
 
       - name: Create or update Issue on problems
         if: always()
