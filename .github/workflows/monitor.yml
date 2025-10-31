@@ -38,6 +38,9 @@ jobs:
       - name: Run checks
         run: |
           python -c "import monitoring.run_all as r; r.run_all()"
+          # Debug: show what was created
+          echo "Checking monitoring/.reports directory:"
+          ls -la monitoring/.reports/ || echo "No .reports directory found"
 
       - name: Summarize report
         if: always()
