@@ -48,6 +48,11 @@ def check_seo_for_url(url: str) -> Dict[str, Any]:
 		if resp.status != 200:
 			return {"url": url, "status": resp.status, "error": f"HTTP {resp.status}"}
 		
+		# Skip non-HTML files
+		content_type = resp.headers.get("content-type", "")
+		if not content_type.startswith("text/html"):
+			return None  # Skip CSS, JS, images, etc.
+		
 		metas = extract_meta_tags(resp.body)
 		
 		# Check title
@@ -113,6 +118,12 @@ def run() -> Dict[str, Any]:
 		
 		# Check SEO for this URL
 		result = check_seo_for_url(url)
+		
+		# Skip None results (non-HTML files)
+		if result is None:
+			visited.discard(url)  # Don't count as visited since we skipped it
+			continue
+		
 		if "error" not in result or result["error"] is None:
 			all_results.append(result)
 			
