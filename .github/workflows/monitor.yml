@@ -75,6 +75,9 @@ jobs:
             if ((data.links?.broken_count||0) > 0) problems.push(`Broken links: ${data.links?.broken_count}`);
             if ((data.security?.missing||[]).length > 0) problems.push(`Missing headers: ${data.security?.missing.join(', ')}`);
             if ((data.robots?.issues||[]).length > 0) problems.push(`Robots/Sitemap issues: ${data.robots?.issues.join('; ')}`);
+            if (!data.seo?.ok && (data.seo?.issues||[]).length > 0) problems.push(`SEO issues: ${data.seo.issues.length}`);
+            if (!data.dns?.ok) problems.push(`DNS error: ${data.dns?.error||'unknown'}`);
+            if (!data.images?.ok && (data.images?.issues||[]).length > 0) problems.push(`Image issues: ${data.images.issues.length}`);
             if (problems.length === 0) {
               core.info('No problems detected.');
               return;
@@ -92,6 +95,16 @@ jobs:
             if ((data.security?.missing||[]).length > 0) {
               details += '\n\nMissing security headers:';
               for (const h of data.security.missing) details += `\n- ${h}`;
+            }
+            if ((data.seo?.issues||[]).length > 0) {
+              details += '\n\nSEO issues:';
+              for (const issue of data.seo.issues) details += `\n- ${issue}`;
+            }
+            if ((data.images?.issues||[]).length > 0) {
+              details += '\n\nImage issues:';
+              for (const issue of data.images.issues.slice(0,10)) {
+                details += `\n- ${issue.url} — ${issue.error}`;
+              }
             }
             const body = `Automated monitoring detected issues for ${data.site} at ${data.timestamp}.\n\n`+
               problems.map(p=>`- ${p}`).join('\n') + details +
